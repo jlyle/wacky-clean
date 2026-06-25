@@ -103,14 +103,21 @@ input,select{width:100%;background:#261007;border:1px solid var(--border);color:
   .results{box-shadow:none;border:none;padding:0;background:none}
   .results h2{color:#000;margin-bottom:10px}
   .table-wrap{overflow:visible}
-  .spreadsheet-table{width:100%;border-collapse:collapse;font-size:11px}
-  .spreadsheet-table th,.spreadsheet-table td{color:#000;border:1px solid #bbb;padding:6px 8px}
+  .spreadsheet-table{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}
+  .spreadsheet-table th,.spreadsheet-table td{color:#000;border:1px solid #bbb;padding:6px 8px;overflow:hidden}
   .spreadsheet-table th{background:#f0f0f0}
+  /* fixed column widths for print (col 9 Action is hidden) */
+  .spreadsheet-table th:nth-child(1),.spreadsheet-table td:nth-child(1){width:46px}   /* Series */
+  .spreadsheet-table th:nth-child(2),.spreadsheet-table td:nth-child(2){width:26px}   /* # */
+  .spreadsheet-table th:nth-child(4),.spreadsheet-table td:nth-child(4){width:52px}   /* Status */
+  .spreadsheet-table th:nth-child(5),.spreadsheet-table td:nth-child(5){width:48px;text-align:center}   /* Dupes */
+  .spreadsheet-table th:nth-child(6),.spreadsheet-table td:nth-child(6){width:78px}   /* Back */
   .table-owned{background:#e6f4ea !important}
   .table-missing{background:#fdecea !important}
   .spreadsheet-table button{display:none}
-  .spreadsheet-table input[type="number"]{border:none;background:transparent;padding:0;width:auto;color:#000}
-  .spreadsheet-table input[type="text"]{border:none;background:transparent;padding:0;width:auto;color:#000}
+  .spreadsheet-table input[type="number"]{border:none;background:transparent;padding:0;width:100%;color:#000;text-align:center}
+  .spreadsheet-table input[type="text"]{border:none;background:transparent;padding:0;width:100%;color:#000}
+  .spreadsheet-table .notes-input{min-width:0;width:100%}
   .spreadsheet-table select{border:none;background:transparent;padding:0;color:#000;-webkit-appearance:none;appearance:none}
   .spreadsheet-table th:last-child,.spreadsheet-table td:last-child{display:none}
 }

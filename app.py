@@ -356,6 +356,17 @@ def export_csv():
         headers={"Content-Disposition": "attachment; filename=wacky-packages.csv"},
     )
 
+@app.route("/export/txt")
+def export_txt():
+    cards = load_cards()
+    filtered = apply_card_filters(cards, request.args)
+    lines = [f"{c['series']}\t{c['sticker_number']}\t{c['name']}" for c in filtered]
+    return Response(
+        "\n".join(lines) + "\n",
+        mimetype="text/plain",
+        headers={"Content-Disposition": "attachment; filename=wacky-packages.txt"},
+    )
+
 @app.route("/update_back_color/<int:card_id>", methods=["POST"])
 def update_back_color(card_id):
     value = request.form.get("back_color") or None
