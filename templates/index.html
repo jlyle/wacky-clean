@@ -143,6 +143,7 @@
             <th>Dupes</th>
             <th>Back</th>
             <th>Code</th>
+            <th>Notes</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -172,6 +173,13 @@
               </form>
             </td>
             <td>{{ c.code }}</td>
+            <td>
+              <form method="post" action="{{ url_for('update_notes', card_id=c.id) }}">
+                <input type="hidden" name="next" value="{{ request.full_path }}">
+                <input class="notes-input" type="text" name="notes" value="{{ c.notes }}" placeholder="Add notes…">
+                <button class="btn btn-small btn-secondary" type="submit">Save</button>
+              </form>
+            </td>
             <td>
               {% if c.owned == 1 %}
               <form method="post" action="{{ url_for('mark_missing', card_id=c.id) }}">

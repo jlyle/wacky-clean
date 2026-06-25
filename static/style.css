@@ -77,6 +77,8 @@ input,select{width:100%;background:#261007;border:1px solid var(--border);color:
 .table-wrap{overflow:auto}
 .spreadsheet-table{width:100%;border-collapse:collapse}
 .spreadsheet-table th,.spreadsheet-table td{padding:12px 10px;border-bottom:1px solid #4f250f;text-align:left;vertical-align:middle}
+.spreadsheet-table form{display:flex;gap:6px;align-items:center;margin:0}
+.notes-input{min-width:160px}
 .table-owned{background:rgba(0,255,0,.08)}
 .table-missing{background:rgba(255,0,0,.08)}
 .detail-layout{padding-top:8px}
@@ -108,6 +110,7 @@ input,select{width:100%;background:#261007;border:1px solid var(--border);color:
   .table-missing{background:#fdecea !important}
   .spreadsheet-table button{display:none}
   .spreadsheet-table input[type="number"]{border:none;background:transparent;padding:0;width:auto;color:#000}
+  .spreadsheet-table input[type="text"]{border:none;background:transparent;padding:0;width:auto;color:#000}
   .spreadsheet-table select{border:none;background:transparent;padding:0;color:#000;-webkit-appearance:none;appearance:none}
   .spreadsheet-table th:last-child,.spreadsheet-table td:last-child{display:none}
 }
