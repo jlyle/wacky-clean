@@ -360,7 +360,7 @@ def export_csv():
 def export_txt():
     cards = load_cards()
     filtered = apply_card_filters(cards, request.args)
-    lines = [f"s{c['series']} #{c['sticker_number']} {c['name']}" for c in filtered]
+    lines = [f"Wacky Packages - s{c['series']} #{c['sticker_number']} {c['name']}" for c in filtered]
     return Response(
         "\n".join(lines) + "\n",
         mimetype="text/plain",
