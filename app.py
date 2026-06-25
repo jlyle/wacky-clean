@@ -12,6 +12,7 @@ PUZZLE_PIECES_PER_SERIES = 9
 
 SERIES1_MAP = {
     1: {"title": "6 Up", "image": "1st_series_01_6up.jpg"},
+    2: {"title": "Band Ache", "image": "1st_series_02_bandache.jpg"},
     3: {"title": "Breadcrust", "image": "1st_series_03_breadcrust.jpg"},
     4: {"title": "Camals", "image": "1st_series_04_camals.jpg"},
     5: {"title": "Chock", "image": "1st_series_05_chock.jpg"},
