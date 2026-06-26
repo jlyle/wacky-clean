@@ -8,6 +8,7 @@ app.secret_key = "wacky-value-box"
 BASE_DIR = Path(__file__).resolve().parent
 DB_CANDIDATES = [BASE_DIR / "wacky_packages.db", BASE_DIR / "cards.db"]
 BACK_COLOR_OPTIONS = ["white", "tan", "red ludlow", "black ludlow", "cloth"]
+COND_OPTIONS = ["GM", "M", "NM", "EX", "VG", "G", "F", "P"]
 PUZZLE_PIECES_PER_SERIES = 9
 
 SERIES1_MAP = {
@@ -69,6 +70,7 @@ def ensure_card_columns():
         "duplicate_count": "INTEGER DEFAULT 0",
         "owned": "INTEGER DEFAULT 0",
         "notes": "TEXT",
+        "cond": "TEXT",
     }
     for col, col_type in wanted.items():
         if col not in cols:
@@ -144,6 +146,7 @@ def load_cards():
         "image" if "image" in cols else "NULL AS image",
         "duplicate_count" if "duplicate_count" in cols else "0 AS duplicate_count",
         "notes" if "notes" in cols else "NULL AS notes",
+        "cond" if "cond" in cols else "NULL AS cond",
     ]
     rows = conn.execute(f"SELECT {', '.join(fields)} FROM cards ORDER BY series, sticker_number").fetchall()
     conn.close()
@@ -164,6 +167,7 @@ def load_cards():
             "image": get_image_value(row, cols),
             "duplicate_count": dupes,
             "notes": row["notes"] or "",
+            "cond": row["cond"] or "",
             "code": f"S{int(row['series']):02d}-#{int(row['sticker_number'])}",
         })
     return cards
@@ -195,7 +199,7 @@ def apply_card_filters(cards, args):
         if back_color_filter and (c["back_color"] or "").strip().lower() != back_color_filter:
             continue
         if search:
-            blob = " ".join([c["name"], c["sticker_name"] or "", str(c["series"]), str(c["sticker_number"]), c["code"], c["back_color"] or "", str(c["duplicate_count"]), c["notes"] or ""]).lower()
+            blob = " ".join([c["name"], c["sticker_name"] or "", str(c["series"]), str(c["sticker_number"]), c["code"], c["back_color"] or "", c["cond"] or "", str(c["duplicate_count"]), c["notes"] or ""]).lower()
             if search not in blob:
                 continue
         filtered.append(c)
@@ -250,7 +254,7 @@ def index():
     view_mode = (request.args.get("view") or "gallery").strip().lower()
     if view_mode not in ("gallery", "spreadsheet"):
         view_mode = "gallery"
-    return render_template("index.html", cards=filtered, total_cards=total_cards, owned_total=owned_total, duplicate_total=duplicate_total, completion_pct=completion_pct, series_progress=series_progress, search=request.args.get("search", ""), series_filter=request.args.get("series", ""), ownership_filter=request.args.get("ownership", ""), back_color_filter=request.args.get("back_color", ""), sort_by=request.args.get("sort", "series_number"), view_mode=view_mode, missing_only=(request.args.get("missing_only") or "").strip().lower() in {"1","true","on","yes"}, duplicates_only=(request.args.get("duplicates_only") or "").strip().lower() in {"1","true","on","yes"}, back_color_options=BACK_COLOR_OPTIONS)
+    return render_template("index.html", cards=filtered, total_cards=total_cards, owned_total=owned_total, duplicate_total=duplicate_total, completion_pct=completion_pct, series_progress=series_progress, search=request.args.get("search", ""), series_filter=request.args.get("series", ""), ownership_filter=request.args.get("ownership", ""), back_color_filter=request.args.get("back_color", ""), sort_by=request.args.get("sort", "series_number"), view_mode=view_mode, missing_only=(request.args.get("missing_only") or "").strip().lower() in {"1","true","on","yes"}, duplicates_only=(request.args.get("duplicates_only") or "").strip().lower() in {"1","true","on","yes"}, back_color_options=BACK_COLOR_OPTIONS, cond_options=COND_OPTIONS)
 
 @app.route("/puzzles")
 def puzzles():
@@ -337,7 +341,7 @@ def export_csv():
     filtered = apply_card_filters(cards, request.args)
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Series", "Number", "Name", "Status", "Duplicates", "Back Color", "Code", "Notes"])
+    writer.writerow(["Series", "Number", "Name", "Status", "Duplicates", "Back Color", "Cond", "Code", "Notes"])
     for c in filtered:
         writer.writerow([
             c["series"],
@@ -346,6 +350,7 @@ def export_csv():
             "Owned" if c["owned"] == 1 else "Missing",
             c["duplicate_count"],
             c["back_color"] or "",
+            c["cond"] or "",
             c["code"],
             c["notes"] or "",
         ])
@@ -375,6 +380,18 @@ def update_back_color(card_id):
     conn.commit()
     conn.close()
     flash("Back color updated.")
+    return redirect(request.form.get("next") or request.referrer or url_for("index"))
+
+@app.route("/update_cond/<int:card_id>", methods=["POST"])
+def update_cond(card_id):
+    value = request.form.get("cond") or None
+    if value not in COND_OPTIONS:
+        value = None
+    conn = get_db()
+    conn.execute("UPDATE cards SET cond = ? WHERE id = ?", (value, card_id))
+    conn.commit()
+    conn.close()
+    flash("Condition updated.")
     return redirect(request.form.get("next") or request.referrer or url_for("index"))
 
 if __name__ == "__main__":

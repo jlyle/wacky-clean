@@ -42,6 +42,7 @@
         <div class="detail-row"><span>Status</span><strong>{{ "Owned" if card.owned == 1 else "Missing" }}</strong></div>
         <div class="detail-row"><span>Duplicates</span><strong>{{ card.duplicate_count }}</strong></div>
         <div class="detail-row"><span>Back color</span><strong>{{ card.back_color or "—" }}</strong></div>
+        <div class="detail-row"><span>Cond</span><strong>{{ card.cond or "—" }}</strong></div>
       </div>
 
       <div class="notes-block">

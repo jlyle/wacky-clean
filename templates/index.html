@@ -141,6 +141,7 @@
             <th>Status</th>
             <th>Dupes</th>
             <th>Back</th>
+            <th>Cond</th>
             <th>Notes</th>
             <th>Action</th>
           </tr>
@@ -166,6 +167,17 @@
                   <option value="">—</option>
                   {% for option in back_color_options %}
                   <option value="{{ option }}" {% if c.back_color == option %}selected{% endif %}>{{ option|title }}</option>
+                  {% endfor %}
+                </select>
+              </form>
+            </td>
+            <td>
+              <form method="post" action="{{ url_for('update_cond', card_id=c.id) }}">
+                <input type="hidden" name="next" value="{{ request.full_path }}">
+                <select name="cond" onchange="this.form.submit()">
+                  <option value="">—</option>
+                  {% for option in cond_options %}
+                  <option value="{{ option }}" {% if c.cond == option %}selected{% endif %}>{{ option }}</option>
                   {% endfor %}
                 </select>
               </form>
@@ -217,6 +229,17 @@
             <option value="">—</option>
             {% for option in back_color_options %}
             <option value="{{ option }}" {% if c.back_color == option %}selected{% endif %}>{{ option|title }}</option>
+            {% endfor %}
+          </select>
+        </form>
+
+        <form method="post" action="{{ url_for('update_cond', card_id=c.id) }}" class="backcolor-form">
+          <input type="hidden" name="next" value="{{ request.full_path }}">
+          <label>Condition</label>
+          <select name="cond" onchange="this.form.submit()">
+            <option value="">—</option>
+            {% for option in cond_options %}
+            <option value="{{ option }}" {% if c.cond == option %}selected{% endif %}>{{ option }}</option>
             {% endfor %}
           </select>
         </form>
