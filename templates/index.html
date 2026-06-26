@@ -52,11 +52,22 @@
     </div>
 
     <div class="field">
+      <label for="cond">Cond</label>
+      <select id="cond" name="cond">
+        <option value="">All</option>
+        {% for option in cond_options %}
+        <option value="{{ option }}" {% if cond_filter == option %}selected{% endif %}>{{ option }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="field">
       <label for="sort">Sort</label>
       <select id="sort" name="sort">
         <option value="series_number" {% if sort_by == "series_number" %}selected{% endif %}>Series</option>
         <option value="name" {% if sort_by == "name" %}selected{% endif %}>Name</option>
         <option value="duplicates" {% if sort_by == "duplicates" %}selected{% endif %}>Dupes</option>
+        <option value="condition" {% if sort_by == "condition" %}selected{% endif %}>Condition</option>
       </select>
     </div>
 

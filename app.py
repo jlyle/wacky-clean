@@ -6,7 +6,6 @@ app = Flask(__name__)
 app.secret_key = "wacky-value-box"
 
 BASE_DIR = Path(__file__).resolve().parent
-DB_CANDIDATES = [BASE_DIR / "wacky_packages.db", BASE_DIR / "cards.db"]
 BACK_COLOR_OPTIONS = ["white", "tan", "red ludlow", "black ludlow", "cloth"]
 COND_OPTIONS = ["GM", "M", "NM", "EX", "VG", "G", "F", "P"]
 PUZZLE_PIECES_PER_SERIES = 9
@@ -43,12 +42,6 @@ SERIES1_MAP = {
     30: {"title": "Weakies", "image": "1st_series_30_weakies.jpg"},
 }
 
-def pick_db():
-    for db in DB_CANDIDATES:
-        if db.exists():
-            return db
-    return BASE_DIR / "wacky_packages.db"
-
 DB_PATH = BASE_DIR / "wacky_packages.db"
 
 def get_db():
@@ -76,6 +69,10 @@ def ensure_card_columns():
         if col not in cols:
             conn.execute(f"ALTER TABLE cards ADD COLUMN {col} {col_type}")
     conn.execute("UPDATE cards SET duplicate_count = 0 WHERE duplicate_count IS NULL")
+    # Retire the legacy unused "condition" column in favor of "cond".
+    if "condition" in cols:
+        conn.execute("UPDATE cards SET cond = condition WHERE (cond IS NULL OR cond = '') AND condition IS NOT NULL AND condition != ''")
+        conn.execute("ALTER TABLE cards DROP COLUMN condition")
     conn.commit()
     conn.close()
 
@@ -177,6 +174,7 @@ def apply_card_filters(cards, args):
     series_filter = (args.get("series") or "").strip()
     ownership_filter = (args.get("ownership") or "").strip().lower()
     back_color_filter = (args.get("back_color") or "").strip().lower()
+    cond_filter = (args.get("cond") or "").strip().upper()
     sort_by = (args.get("sort") or "series_number").strip().lower()
     missing_only = (args.get("missing_only") or "").strip().lower() in {"1","true","on","yes"}
     duplicates_only = (args.get("duplicates_only") or "").strip().lower() in {"1","true","on","yes"}
@@ -198,6 +196,8 @@ def apply_card_filters(cards, args):
             continue
         if back_color_filter and (c["back_color"] or "").strip().lower() != back_color_filter:
             continue
+        if cond_filter and (c["cond"] or "").strip().upper() != cond_filter:
+            continue
         if search:
             blob = " ".join([c["name"], c["sticker_name"] or "", str(c["series"]), str(c["sticker_number"]), c["code"], c["back_color"] or "", c["cond"] or "", str(c["duplicate_count"]), c["notes"] or ""]).lower()
             if search not in blob:
@@ -207,6 +207,9 @@ def apply_card_filters(cards, args):
         filtered.sort(key=lambda x: x["name"].lower())
     elif sort_by == "duplicates":
         filtered.sort(key=lambda x: (-x["duplicate_count"], x["series"], x["sticker_number"]))
+    elif sort_by == "condition":
+        cond_rank = {grade: i for i, grade in enumerate(COND_OPTIONS)}
+        filtered.sort(key=lambda x: (cond_rank.get((x["cond"] or "").strip().upper(), len(COND_OPTIONS)), x["series"], x["sticker_number"]))
     else:
         filtered.sort(key=lambda x: (x["series"], x["sticker_number"]))
     return filtered
@@ -254,7 +257,7 @@ def index():
     view_mode = (request.args.get("view") or "gallery").strip().lower()
     if view_mode not in ("gallery", "spreadsheet"):
         view_mode = "gallery"
-    return render_template("index.html", cards=filtered, total_cards=total_cards, owned_total=owned_total, duplicate_total=duplicate_total, completion_pct=completion_pct, series_progress=series_progress, search=request.args.get("search", ""), series_filter=request.args.get("series", ""), ownership_filter=request.args.get("ownership", ""), back_color_filter=request.args.get("back_color", ""), sort_by=request.args.get("sort", "series_number"), view_mode=view_mode, missing_only=(request.args.get("missing_only") or "").strip().lower() in {"1","true","on","yes"}, duplicates_only=(request.args.get("duplicates_only") or "").strip().lower() in {"1","true","on","yes"}, back_color_options=BACK_COLOR_OPTIONS, cond_options=COND_OPTIONS)
+    return render_template("index.html", cards=filtered, total_cards=total_cards, owned_total=owned_total, duplicate_total=duplicate_total, completion_pct=completion_pct, series_progress=series_progress, search=request.args.get("search", ""), series_filter=request.args.get("series", ""), ownership_filter=request.args.get("ownership", ""), back_color_filter=request.args.get("back_color", ""), cond_filter=request.args.get("cond", ""), sort_by=request.args.get("sort", "series_number"), view_mode=view_mode, missing_only=(request.args.get("missing_only") or "").strip().lower() in {"1","true","on","yes"}, duplicates_only=(request.args.get("duplicates_only") or "").strip().lower() in {"1","true","on","yes"}, back_color_options=BACK_COLOR_OPTIONS, cond_options=COND_OPTIONS)
 
 @app.route("/puzzles")
 def puzzles():
@@ -365,7 +368,7 @@ def export_csv():
 def export_txt():
     cards = load_cards()
     filtered = apply_card_filters(cards, request.args)
-    lines = [f"Wacky Packages - s{c['series']} #{c['sticker_number']} {c['name']}" for c in filtered]
+    lines = [f"Wacky Packages - s{c['series']} #{c['sticker_number']} {c['name']}" + (f" [{c['cond']}]" if c['cond'] else "") for c in filtered]
     return Response(
         "\n".join(lines) + "\n",
         mimetype="text/plain",
