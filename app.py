@@ -375,6 +375,28 @@ def export_txt():
         headers={"Content-Disposition": "attachment; filename=wacky-packages.txt"},
     )
 
+@app.route("/export/duplicates")
+def export_duplicates():
+    cards = load_cards()
+    filtered = [c for c in apply_card_filters(cards, request.args) if c["duplicate_count"] > 0]
+    filtered.sort(key=lambda c: (c["series"], c["sticker_number"]))
+    lines = []
+    current_series = None
+    for c in filtered:
+        if c["series"] != current_series:
+            if current_series is not None:
+                lines.append("")
+            current_series = c["series"]
+            lines.append(f"Series {c['series']}")
+            lines.append("")
+            lines.append("")
+        lines.append(f"{c['name']}\t{c['duplicate_count']}")
+    return Response(
+        "\n".join(lines) + ("\n" if lines else ""),
+        mimetype="text/plain",
+        headers={"Content-Disposition": "attachment; filename=wacky-packages-duplicates.txt"},
+    )
+
 @app.route("/update_back_color/<int:card_id>", methods=["POST"])
 def update_back_color(card_id):
     value = request.form.get("back_color") or None

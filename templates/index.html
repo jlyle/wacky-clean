@@ -137,6 +137,7 @@
       <div class="export-actions">
         <a class="btn btn-secondary btn-small" href="{{ '/export/csv?' + request.query_string.decode('utf-8') }}">Save CSV</a>
         <a class="btn btn-secondary btn-small" href="{{ '/export/txt?' + request.query_string.decode('utf-8') }}">Save TXT</a>
+        <a class="btn btn-secondary btn-small" href="{{ '/export/duplicates?' + request.query_string.decode('utf-8') }}">Save Dupes TXT</a>
         <button class="btn btn-secondary btn-small" onclick="window.print()">Save PDF</button>
       </div>
     </div>
