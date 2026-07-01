@@ -52,22 +52,11 @@
     </div>
 
     <div class="field">
-      <label for="cond">Cond</label>
-      <select id="cond" name="cond">
-        <option value="">All</option>
-        {% for option in cond_options %}
-        <option value="{{ option }}" {% if cond_filter == option %}selected{% endif %}>{{ option }}</option>
-        {% endfor %}
-      </select>
-    </div>
-
-    <div class="field">
       <label for="sort">Sort</label>
       <select id="sort" name="sort">
         <option value="series_number" {% if sort_by == "series_number" %}selected{% endif %}>Series</option>
         <option value="name" {% if sort_by == "name" %}selected{% endif %}>Name</option>
         <option value="duplicates" {% if sort_by == "duplicates" %}selected{% endif %}>Dupes</option>
-        <option value="condition" {% if sort_by == "condition" %}selected{% endif %}>Condition</option>
       </select>
     </div>
 
@@ -138,6 +127,7 @@
         <a class="btn btn-secondary btn-small" href="{{ '/export/csv?' + request.query_string.decode('utf-8') }}">Save CSV</a>
         <a class="btn btn-secondary btn-small" href="{{ '/export/txt?' + request.query_string.decode('utf-8') }}">Save TXT</a>
         <a class="btn btn-secondary btn-small" href="/export/duplicates">Save Dupes TXT</a>
+        <a class="btn btn-secondary btn-small" href="/export/owned">Save Owned TXT</a>
         <button class="btn btn-secondary btn-small" onclick="window.print()">Save PDF</button>
       </div>
     </div>
@@ -153,7 +143,6 @@
             <th>Status</th>
             <th>Dupes</th>
             <th>Back</th>
-            <th>Cond</th>
             <th>Notes</th>
             <th>Action</th>
           </tr>
@@ -179,17 +168,6 @@
                   <option value="">—</option>
                   {% for option in back_color_options %}
                   <option value="{{ option }}" {% if c.back_color == option %}selected{% endif %}>{{ option|title }}</option>
-                  {% endfor %}
-                </select>
-              </form>
-            </td>
-            <td>
-              <form method="post" action="{{ url_for('update_cond', card_id=c.id) }}">
-                <input type="hidden" name="next" value="{{ request.full_path }}">
-                <select name="cond" onchange="this.form.submit()">
-                  <option value="">—</option>
-                  {% for option in cond_options %}
-                  <option value="{{ option }}" {% if c.cond == option %}selected{% endif %}>{{ option }}</option>
                   {% endfor %}
                 </select>
               </form>
@@ -245,16 +223,6 @@
           </select>
         </form>
 
-        <form method="post" action="{{ url_for('update_cond', card_id=c.id) }}" class="backcolor-form">
-          <input type="hidden" name="next" value="{{ request.full_path }}">
-          <label>Condition</label>
-          <select name="cond" onchange="this.form.submit()">
-            <option value="">—</option>
-            {% for option in cond_options %}
-            <option value="{{ option }}" {% if c.cond == option %}selected{% endif %}>{{ option }}</option>
-            {% endfor %}
-          </select>
-        </form>
 
         <form method="post" action="{{ url_for('update_duplicates', card_id=c.id) }}" class="dupe-form">
           <input type="hidden" name="next" value="{{ request.full_path }}">
