@@ -378,7 +378,7 @@ def export_txt():
 @app.route("/export/duplicates")
 def export_duplicates():
     cards = load_cards()
-    filtered = [c for c in apply_card_filters(cards, request.args) if c["duplicate_count"] > 0]
+    filtered = [c for c in cards if c["duplicate_count"] > 0]
     filtered.sort(key=lambda c: (c["series"], c["sticker_number"]))
     lines = []
     current_series = None
