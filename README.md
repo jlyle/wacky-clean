@@ -5,14 +5,42 @@ Wacky Packages stickers: 488 cards across 16 series, plus the 16-series jigsaw
 puzzle-back set (9 pieces per series, 144 pieces total). Data lives in a
 single SQLite file (`wacky_packages.db`) that's tracked in this repo.
 
-## Running it
+## Getting started
+
+### Requirements
+
+- Linux, macOS, or WSL (anywhere `bash` and `python3` are available)
+- Python 3.9+ with the `venv` module (on Debian/Ubuntu: `apt install python3-venv`)
+- No external database server — collection data is a single SQLite file
+  committed to the repo
+
+### Clone and run
 
 ```bash
+git clone git@github.com:jlyle/wacky-clean.git
+cd wacky-clean
 ./run.sh
 ```
 
-This creates a venv, installs Flask, and starts the app at
-`http://localhost:5001`.
+`run.sh` creates a `venv/`, installs Flask into it, and starts the app at
+`http://localhost:5001`. Re-running it is safe — it reuses the existing venv.
+
+### File layout
+
+| Path                    | Purpose                                                        |
+|--------------------------|-----------------------------------------------------------------|
+| `app.py`                 | Flask app: routes, DB access, filtering, exports                |
+| `wacky_packages.db`      | SQLite database — cards and puzzle pieces (tracked in git)      |
+| `run.sh`                 | Sets up the venv, installs deps, launches the app                |
+| `requirements.txt`       | Python dependencies (just `flask`)                               |
+| `templates/base.html`    | Shared page shell (nav, flash messages)                          |
+| `templates/index.html`   | Card list: gallery/spreadsheet views, filters, stats, exports    |
+| `templates/card_detail.html` | Single-card detail view with notes editor                    |
+| `templates/puzzles.html` | Puzzle-back tracker, grouped by series                           |
+| `static/style.css`       | App styling                                                      |
+| `static/cards/`          | Card images referenced by `image`/`image_filename` DB columns    |
+| `dupes.txt`               | Reference list of known duplicate cards                          |
+| `README.txt`              | Legacy install notes for an earlier drop-in patch package         |
 
 ## Inventory
 
@@ -83,3 +111,5 @@ Unfiltered, whole-collection reports:
 - Flask + SQLite (stdlib `sqlite3`, no ORM)
 - Server-rendered Jinja templates, no JS framework
 - Card images in `static/cards/`
+- Runs as a single-process dev server (`app.run`) on port 5001 — fine for
+  local/personal use, not hardened for public hosting
