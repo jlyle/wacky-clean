@@ -5,6 +5,17 @@ Wacky Packages stickers: 488 cards across 16 series, plus the 16-series jigsaw
 puzzle-back set (9 pieces per series, 144 pieces total). Data lives in a
 single SQLite file (`wacky_packages.db`) that's tracked in this repo.
 
+## Screenshots
+
+**Gallery view**
+![Gallery view](static/screenshots/gallery.png)
+
+**Spreadsheet view**
+![Spreadsheet view](static/screenshots/spreadsheet.png)
+
+**Puzzle tracker**
+![Puzzle tracker](static/screenshots/puzzles.png)
+
 ## Getting started
 
 ### Requirements
@@ -113,3 +124,7 @@ Unfiltered, whole-collection reports:
 - Card images in `static/cards/`
 - Runs as a single-process dev server (`app.run`) on port 5001 — fine for
   local/personal use, not hardened for public hosting
+
+## Image credit
+
+All card images were scraped from http://wackypackages.org — permission pending.
