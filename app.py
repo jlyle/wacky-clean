@@ -421,6 +421,27 @@ def export_owned():
         headers={"Content-Disposition": "attachment; filename=wacky-packages-owned.txt"},
     )
 
+@app.route("/export/missing")
+def export_missing():
+    cards = load_cards()
+    cards = [c for c in cards if c["owned"] != 1]
+    cards.sort(key=lambda c: (c["series"], c["sticker_number"]))
+    lines = []
+    current_series = None
+    for c in cards:
+        if c["series"] != current_series:
+            if current_series is not None:
+                lines.append("")
+            current_series = c["series"]
+            lines.append(f"Series {c['series']}")
+            lines.append("")
+        lines.append(f"#{c['sticker_number']} - {c['name']}")
+    return Response(
+        "\n".join(lines) + ("\n" if lines else ""),
+        mimetype="text/plain",
+        headers={"Content-Disposition": "attachment; filename=wacky-packages-missing.txt"},
+    )
+
 @app.route("/update_back_color/<int:card_id>", methods=["POST"])
 def update_back_color(card_id):
     value = request.form.get("back_color") or None
