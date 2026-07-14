@@ -87,6 +87,8 @@ input,select{width:100%;background:#261007;border:1px solid var(--border);color:
 .spreadsheet-table select{min-width:104px}
 .notes-input{min-width:130px}
 .order-date-input{min-width:140px}
+.export-actions{display:flex;flex-direction:column;gap:8px}
+.export-actions-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .order-export-form{display:inline-flex;gap:6px;align-items:center}
 .order-export-form input[type="date"]{width:auto;padding:8px 10px;font-size:13px}
 .table-owned{background:rgba(0,255,0,.08)}

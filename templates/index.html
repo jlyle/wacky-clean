@@ -124,17 +124,21 @@
         <span class="pill pill-neutral">Dupes tracked</span>
       </div>
       <div class="export-actions">
-        <a class="btn btn-secondary btn-small" href="{{ '/export/csv?' + request.query_string.decode('utf-8') }}">Save CSV</a>
-        <a class="btn btn-secondary btn-small" href="{{ '/export/txt?' + request.query_string.decode('utf-8') }}">Save TXT</a>
-        <a class="btn btn-secondary btn-small" href="/export/duplicates">Save Dupes TXT</a>
-        <a class="btn btn-secondary btn-small" href="/export/owned">Save Owned TXT</a>
-        <a class="btn btn-secondary btn-small" href="/export/missing">Save Missing TXT</a>
-        <form method="get" action="/export/orders" class="order-export-form">
-          <input type="date" name="from" title="From date">
-          <input type="date" name="to" title="To date">
-          <button class="btn btn-secondary btn-small" type="submit">Save Orders TXT</button>
-        </form>
-        <button class="btn btn-secondary btn-small" onclick="window.print()">Save PDF</button>
+        <div class="export-actions-row">
+          <a class="btn btn-secondary btn-small" href="{{ '/export/csv?' + request.query_string.decode('utf-8') }}">Save CSV</a>
+          <a class="btn btn-secondary btn-small" href="{{ '/export/txt?' + request.query_string.decode('utf-8') }}">Save TXT</a>
+          <a class="btn btn-secondary btn-small" href="/export/duplicates">Save Dupes TXT</a>
+        </div>
+        <div class="export-actions-row">
+          <a class="btn btn-secondary btn-small" href="/export/owned">Save Owned TXT</a>
+          <a class="btn btn-secondary btn-small" href="/export/missing">Save Missing TXT</a>
+          <button class="btn btn-secondary btn-small" onclick="window.print()">Save PDF</button>
+          <form method="get" action="/export/orders" class="order-export-form">
+            <input type="date" name="from" title="From date">
+            <input type="date" name="to" title="To date">
+            <button class="btn btn-secondary btn-small" type="submit">Save Orders TXT</button>
+          </form>
+        </div>
       </div>
     </div>
 
