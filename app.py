@@ -434,4 +434,4 @@ def update_back_color(card_id):
 if __name__ == "__main__":
     ensure_card_columns()
     ensure_puzzle_table()
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    app.run(host="0.0.0.0", port=5050, debug=True)
