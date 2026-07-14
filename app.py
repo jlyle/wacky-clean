@@ -62,6 +62,7 @@ def ensure_card_columns():
         "duplicate_count": "INTEGER DEFAULT 0",
         "owned": "INTEGER DEFAULT 0",
         "notes": "TEXT",
+        "date_ordered": "TEXT",
     }
     for col, col_type in wanted.items():
         if col not in cols:
@@ -139,6 +140,7 @@ def load_cards():
         "image" if "image" in cols else "NULL AS image",
         "duplicate_count" if "duplicate_count" in cols else "0 AS duplicate_count",
         "notes" if "notes" in cols else "NULL AS notes",
+        "date_ordered" if "date_ordered" in cols else "NULL AS date_ordered",
     ]
     rows = conn.execute(f"SELECT {', '.join(fields)} FROM cards ORDER BY series, sticker_number").fetchall()
     conn.close()
@@ -159,6 +161,7 @@ def load_cards():
             "image": get_image_value(row, cols),
             "duplicate_count": dupes,
             "notes": row["notes"] or "",
+            "date_ordered": row["date_ordered"] or "",
             "code": f"S{int(row['series']):02d}-#{int(row['sticker_number'])}",
         })
     return cards
@@ -291,6 +294,16 @@ def update_notes(card_id):
     flash("Notes updated.")
     return redirect(request.form.get("next") or request.referrer or url_for("card_detail", card_id=card_id))
 
+@app.route("/update_date_ordered/<int:card_id>", methods=["POST"])
+def update_date_ordered(card_id):
+    date_ordered = (request.form.get("date_ordered") or "").strip()
+    conn = get_db()
+    conn.execute("UPDATE cards SET date_ordered = ? WHERE id = ?", (date_ordered, card_id))
+    conn.commit()
+    conn.close()
+    flash("Date ordered updated.")
+    return redirect(request.form.get("next") or request.referrer or url_for("card_detail", card_id=card_id))
+
 @app.route("/mark_owned/<int:card_id>", methods=["POST"])
 def mark_owned(card_id):
     conn = get_db()
@@ -332,7 +345,7 @@ def export_csv():
     filtered = apply_card_filters(cards, request.args)
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Series", "Number", "Name", "Status", "Duplicates", "Back Color", "Code", "Notes"])
+    writer.writerow(["Series", "Number", "Name", "Status", "Duplicates", "Back Color", "Code", "Notes", "Date Ordered"])
     for c in filtered:
         writer.writerow([
             c["series"],
@@ -343,6 +356,7 @@ def export_csv():
             c["back_color"] or "",
             c["code"],
             c["notes"] or "",
+            c["date_ordered"] or "",
         ])
     output.seek(0)
     return Response(

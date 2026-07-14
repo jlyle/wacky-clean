@@ -85,6 +85,7 @@ input,select{width:100%;background:#261007;border:1px solid var(--border);color:
 .spreadsheet-table .small-number{width:52px;flex:0 0 auto}
 .spreadsheet-table select{min-width:104px}
 .notes-input{min-width:130px}
+.date-input{min-width:140px}
 .table-owned{background:rgba(0,255,0,.08)}
 .table-missing{background:rgba(255,0,0,.08)}
 .detail-layout{padding-top:8px}
@@ -127,7 +128,9 @@ input,select{width:100%;background:#261007;border:1px solid var(--border);color:
   .spreadsheet-table button{display:none}
   .spreadsheet-table input[type="number"]{border:none;background:transparent;padding:0;width:100%;color:#000;text-align:center}
   .spreadsheet-table input[type="text"]{border:none;background:transparent;padding:0;width:100%;color:#000}
+  .spreadsheet-table input[type="date"]{border:none;background:transparent;padding:0;width:100%;color:#000}
   .spreadsheet-table .notes-input{min-width:0;width:100%}
+  .spreadsheet-table .date-input{min-width:0;width:100%}
   .spreadsheet-table select{border:none;background:transparent;padding:0;color:#000;-webkit-appearance:none;appearance:none}
   .spreadsheet-table th:last-child,.spreadsheet-table td:last-child{display:none}
 }

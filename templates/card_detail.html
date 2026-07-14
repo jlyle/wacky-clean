@@ -42,6 +42,18 @@
         <div class="detail-row"><span>Status</span><strong>{{ "Owned" if card.owned == 1 else "Missing" }}</strong></div>
         <div class="detail-row"><span>Duplicates</span><strong>{{ card.duplicate_count }}</strong></div>
         <div class="detail-row"><span>Back color</span><strong>{{ card.back_color or "—" }}</strong></div>
+        <div class="detail-row"><span>Date ordered</span><strong>{{ card.date_ordered or "—" }}</strong></div>
+      </div>
+
+      <div class="notes-block">
+        <h3>Date ordered</h3>
+        <form method="post" action="{{ url_for('update_date_ordered', card_id=card.id) }}">
+          <input type="hidden" name="next" value="{{ request.full_path }}">
+          <input class="date-input" type="date" name="date_ordered" value="{{ card.date_ordered }}">
+          <div class="notes-actions">
+            <button class="btn btn-primary" type="submit">Save Date</button>
+          </div>
+        </form>
       </div>
 
       <div class="notes-block">
