@@ -71,6 +71,7 @@ input,select{width:100%;background:#261007;border:1px solid var(--border);color:
 .vault-card h3{margin:0 0 10px;font-size:20px}
 .meta{color:var(--muted);font-size:15px}
 .card-bottom{margin-top:14px}
+.order-info-box{margin-top:14px;padding:12px;border:1px solid var(--border-soft);border-radius:14px;background:rgba(31,12,6,.72)}
 .status-code{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
 .code{font-size:15px;font-weight:800;color:#f6d7c3;letter-spacing:.04em}
 .card-actions{display:flex;gap:10px;flex-wrap:wrap}
@@ -85,6 +86,7 @@ input,select{width:100%;background:#261007;border:1px solid var(--border);color:
 .spreadsheet-table .small-number{width:52px;flex:0 0 auto}
 .spreadsheet-table select{min-width:104px}
 .notes-input{min-width:130px}
+.order-date-input{min-width:140px}
 .table-owned{background:rgba(0,255,0,.08)}
 .table-missing{background:rgba(255,0,0,.08)}
 .detail-layout{padding-top:8px}

@@ -62,6 +62,7 @@ def ensure_card_columns():
         "duplicate_count": "INTEGER DEFAULT 0",
         "owned": "INTEGER DEFAULT 0",
         "notes": "TEXT",
+        "order_date": "TEXT",
     }
     for col, col_type in wanted.items():
         if col not in cols:
@@ -139,6 +140,7 @@ def load_cards():
         "image" if "image" in cols else "NULL AS image",
         "duplicate_count" if "duplicate_count" in cols else "0 AS duplicate_count",
         "notes" if "notes" in cols else "NULL AS notes",
+        "order_date" if "order_date" in cols else "NULL AS order_date",
     ]
     rows = conn.execute(f"SELECT {', '.join(fields)} FROM cards ORDER BY series, sticker_number").fetchall()
     conn.close()
@@ -159,6 +161,7 @@ def load_cards():
             "image": get_image_value(row, cols),
             "duplicate_count": dupes,
             "notes": row["notes"] or "",
+            "order_date": row["order_date"] or "",
             "code": f"S{int(row['series']):02d}-#{int(row['sticker_number'])}",
         })
     return cards
@@ -450,6 +453,16 @@ def update_back_color(card_id):
     conn.commit()
     conn.close()
     flash("Back color updated.")
+    return redirect(request.form.get("next") or request.referrer or url_for("index"))
+
+@app.route("/update_order_date/<int:card_id>", methods=["POST"])
+def update_order_date(card_id):
+    value = request.form.get("order_date") or None
+    conn = get_db()
+    conn.execute("UPDATE cards SET order_date = ? WHERE id = ?", (value, card_id))
+    conn.commit()
+    conn.close()
+    flash("Order date updated.")
     return redirect(request.form.get("next") or request.referrer or url_for("index"))
 
 if __name__ == "__main__":

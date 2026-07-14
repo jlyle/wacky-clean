@@ -145,6 +145,7 @@
             <th>Dupes</th>
             <th>Back</th>
             <th>Notes</th>
+            <th>Order date</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -177,6 +178,13 @@
               <form method="post" action="{{ url_for('update_notes', card_id=c.id) }}">
                 <input type="hidden" name="next" value="{{ request.full_path }}">
                 <input class="notes-input" type="text" name="notes" value="{{ c.notes }}">
+                <button class="btn btn-small btn-secondary" type="submit">Save</button>
+              </form>
+            </td>
+            <td>
+              <form method="post" action="{{ url_for('update_order_date', card_id=c.id) }}">
+                <input type="hidden" name="next" value="{{ request.full_path }}">
+                <input class="order-date-input" type="date" name="order_date" value="{{ c.order_date }}">
                 <button class="btn btn-small btn-secondary" type="submit">Save</button>
               </form>
             </td>
@@ -229,6 +237,12 @@
           <input type="hidden" name="next" value="{{ request.full_path }}">
           <label>Duplicates</label>
           <input class="small-number" type="number" min="0" name="duplicate_count" value="{{ c.duplicate_count }}">
+          <button class="btn btn-small btn-secondary" type="submit">Save</button>
+        </form>
+
+        <form method="post" action="{{ url_for('update_order_date', card_id=c.id) }}" class="order-info-box">
+          <label>Order date</label>
+          <input type="date" name="order_date" value="{{ c.order_date }}">
           <button class="btn btn-small btn-secondary" type="submit">Save</button>
         </form>
 
