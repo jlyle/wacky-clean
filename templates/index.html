@@ -124,10 +124,20 @@
         <span class="pill pill-neutral">Dupes tracked</span>
       </div>
       <div class="export-actions">
-        <a class="btn btn-secondary btn-small" href="{{ '/export/csv?' + request.query_string.decode('utf-8') }}">Save CSV</a>
-        <a class="btn btn-secondary btn-small" href="{{ '/export/txt?' + request.query_string.decode('utf-8') }}">Save TXT</a>
-        <a class="btn btn-secondary btn-small" href="/export/duplicates">Save Dupes TXT</a>
-        <a class="btn btn-secondary btn-small" href="/export/owned">Save Owned TXT</a>
+        <div class="export-actions-row">
+          <a class="btn btn-secondary btn-small" href="{{ '/export/csv?' + request.query_string.decode('utf-8') }}">Save CSV</a>
+          <a class="btn btn-secondary btn-small" href="{{ '/export/txt?' + request.query_string.decode('utf-8') }}">Save TXT</a>
+          <a class="btn btn-secondary btn-small" href="/export/duplicates">Save Dupes TXT</a>
+        </div>
+        <div class="export-actions-row">
+          <a class="btn btn-secondary btn-small" href="/export/owned">Save Owned TXT</a>
+          <a class="btn btn-secondary btn-small" href="/export/missing">Save Missing TXT</a>
+          <form method="get" action="/export/orders" class="order-export-form">
+            <input type="date" name="from" title="From date">
+            <input type="date" name="to" title="To date">
+            <button class="btn btn-secondary btn-small" type="submit">Save Orders TXT</button>
+          </form>
+        </div>
       </div>
     </div>
 
@@ -143,7 +153,7 @@
             <th>Dupes</th>
             <th>Back</th>
             <th>Notes</th>
-            <th>Ordered</th>
+            <th>Order date</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -180,9 +190,9 @@
               </form>
             </td>
             <td>
-              <form method="post" action="{{ url_for('update_date_ordered', card_id=c.id) }}">
+              <form method="post" action="{{ url_for('update_order_date', card_id=c.id) }}">
                 <input type="hidden" name="next" value="{{ request.full_path }}">
-                <input class="date-input" type="date" name="date_ordered" value="{{ c.date_ordered }}">
+                <input class="order-date-input" type="date" name="order_date" value="{{ c.order_date }}">
                 <button class="btn btn-small btn-secondary" type="submit">Save</button>
               </form>
             </td>
@@ -238,10 +248,9 @@
           <button class="btn btn-small btn-secondary" type="submit">Save</button>
         </form>
 
-        <form method="post" action="{{ url_for('update_date_ordered', card_id=c.id) }}" class="date-ordered-form">
-          <input type="hidden" name="next" value="{{ request.full_path }}">
-          <label>Date ordered</label>
-          <input class="date-input" type="date" name="date_ordered" value="{{ c.date_ordered }}">
+        <form method="post" action="{{ url_for('update_order_date', card_id=c.id) }}" class="order-info-box">
+          <label>Order date</label>
+          <input type="date" name="order_date" value="{{ c.order_date }}">
           <button class="btn btn-small btn-secondary" type="submit">Save</button>
         </form>
 

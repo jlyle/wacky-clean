@@ -42,14 +42,14 @@
         <div class="detail-row"><span>Status</span><strong>{{ "Owned" if card.owned == 1 else "Missing" }}</strong></div>
         <div class="detail-row"><span>Duplicates</span><strong>{{ card.duplicate_count }}</strong></div>
         <div class="detail-row"><span>Back color</span><strong>{{ card.back_color or "—" }}</strong></div>
-        <div class="detail-row"><span>Date ordered</span><strong>{{ card.date_ordered or "—" }}</strong></div>
+        <div class="detail-row"><span>Order date</span><strong>{{ card.order_date or "—" }}</strong></div>
       </div>
 
       <div class="notes-block">
-        <h3>Date ordered</h3>
-        <form method="post" action="{{ url_for('update_date_ordered', card_id=card.id) }}">
+        <h3>Order date</h3>
+        <form method="post" action="{{ url_for('update_order_date', card_id=card.id) }}">
           <input type="hidden" name="next" value="{{ request.full_path }}">
-          <input class="date-input" type="date" name="date_ordered" value="{{ card.date_ordered }}">
+          <input class="order-date-input" type="date" name="order_date" value="{{ card.order_date }}">
           <div class="notes-actions">
             <button class="btn btn-primary" type="submit">Save Date</button>
           </div>

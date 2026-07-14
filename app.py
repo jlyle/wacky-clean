@@ -62,7 +62,7 @@ def ensure_card_columns():
         "duplicate_count": "INTEGER DEFAULT 0",
         "owned": "INTEGER DEFAULT 0",
         "notes": "TEXT",
-        "date_ordered": "TEXT",
+        "order_date": "TEXT",
     }
     for col, col_type in wanted.items():
         if col not in cols:
@@ -140,7 +140,7 @@ def load_cards():
         "image" if "image" in cols else "NULL AS image",
         "duplicate_count" if "duplicate_count" in cols else "0 AS duplicate_count",
         "notes" if "notes" in cols else "NULL AS notes",
-        "date_ordered" if "date_ordered" in cols else "NULL AS date_ordered",
+        "order_date" if "order_date" in cols else "NULL AS order_date",
     ]
     rows = conn.execute(f"SELECT {', '.join(fields)} FROM cards ORDER BY series, sticker_number").fetchall()
     conn.close()
@@ -161,7 +161,7 @@ def load_cards():
             "image": get_image_value(row, cols),
             "duplicate_count": dupes,
             "notes": row["notes"] or "",
-            "date_ordered": row["date_ordered"] or "",
+            "order_date": row["order_date"] or "",
             "code": f"S{int(row['series']):02d}-#{int(row['sticker_number'])}",
         })
     return cards
@@ -294,16 +294,6 @@ def update_notes(card_id):
     flash("Notes updated.")
     return redirect(request.form.get("next") or request.referrer or url_for("card_detail", card_id=card_id))
 
-@app.route("/update_date_ordered/<int:card_id>", methods=["POST"])
-def update_date_ordered(card_id):
-    date_ordered = (request.form.get("date_ordered") or "").strip()
-    conn = get_db()
-    conn.execute("UPDATE cards SET date_ordered = ? WHERE id = ?", (date_ordered, card_id))
-    conn.commit()
-    conn.close()
-    flash("Date ordered updated.")
-    return redirect(request.form.get("next") or request.referrer or url_for("card_detail", card_id=card_id))
-
 @app.route("/mark_owned/<int:card_id>", methods=["POST"])
 def mark_owned(card_id):
     conn = get_db()
@@ -356,7 +346,7 @@ def export_csv():
             c["back_color"] or "",
             c["code"],
             c["notes"] or "",
-            c["date_ordered"] or "",
+            c["order_date"] or "",
         ])
     output.seek(0)
     return Response(
@@ -435,6 +425,55 @@ def export_owned():
         headers={"Content-Disposition": "attachment; filename=wacky-packages-owned.txt"},
     )
 
+@app.route("/export/missing")
+def export_missing():
+    cards = load_cards()
+    cards = [c for c in cards if c["owned"] != 1]
+    cards.sort(key=lambda c: (c["series"], c["sticker_number"]))
+    lines = []
+    current_series = None
+    for c in cards:
+        if c["series"] != current_series:
+            if current_series is not None:
+                lines.append("")
+            current_series = c["series"]
+            lines.append(f"Series {c['series']}")
+            lines.append("")
+        lines.append(f"#{c['sticker_number']} - {c['name']}")
+    return Response(
+        "\n".join(lines) + ("\n" if lines else ""),
+        mimetype="text/plain",
+        headers={"Content-Disposition": "attachment; filename=wacky-packages-missing.txt"},
+    )
+
+@app.route("/export/orders")
+def export_orders():
+    date_from = (request.args.get("from") or "").strip()
+    date_to = (request.args.get("to") or "").strip()
+    cards = load_cards()
+    cards = [c for c in cards if c["order_date"]]
+    if date_from:
+        cards = [c for c in cards if c["order_date"] >= date_from]
+    if date_to:
+        cards = [c for c in cards if c["order_date"] <= date_to]
+    cards.sort(key=lambda c: (c["series"], c["name"], c["order_date"]))
+    name_width = max((len(c["name"]) for c in cards), default=0)
+    lines = []
+    current_series = None
+    for c in cards:
+        if c["series"] != current_series:
+            if current_series is not None:
+                lines.append("")
+            current_series = c["series"]
+            lines.append(f"Series {c['series']}")
+            lines.append("")
+        lines.append(f"{c['name'].ljust(name_width)}   {c['order_date']}")
+    return Response(
+        "\n".join(lines) + ("\n" if lines else ""),
+        mimetype="text/plain",
+        headers={"Content-Disposition": "attachment; filename=wacky-packages-orders.txt"},
+    )
+
 @app.route("/update_back_color/<int:card_id>", methods=["POST"])
 def update_back_color(card_id):
     value = request.form.get("back_color") or None
@@ -443,6 +482,16 @@ def update_back_color(card_id):
     conn.commit()
     conn.close()
     flash("Back color updated.")
+    return redirect(request.form.get("next") or request.referrer or url_for("index"))
+
+@app.route("/update_order_date/<int:card_id>", methods=["POST"])
+def update_order_date(card_id):
+    value = request.form.get("order_date") or None
+    conn = get_db()
+    conn.execute("UPDATE cards SET order_date = ? WHERE id = ?", (value, card_id))
+    conn.commit()
+    conn.close()
+    flash("Order date updated.")
     return redirect(request.form.get("next") or request.referrer or url_for("index"))
 
 if __name__ == "__main__":
