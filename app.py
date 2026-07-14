@@ -447,8 +447,14 @@ def export_missing():
 
 @app.route("/export/orders")
 def export_orders():
+    date_from = (request.args.get("from") or "").strip()
+    date_to = (request.args.get("to") or "").strip()
     cards = load_cards()
     cards = [c for c in cards if c["order_date"]]
+    if date_from:
+        cards = [c for c in cards if c["order_date"] >= date_from]
+    if date_to:
+        cards = [c for c in cards if c["order_date"] <= date_to]
     cards.sort(key=lambda c: (c["series"], c["name"], c["order_date"]))
     name_width = max((len(c["name"]) for c in cards), default=0)
     lines = []

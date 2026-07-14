@@ -129,7 +129,11 @@
         <a class="btn btn-secondary btn-small" href="/export/duplicates">Save Dupes TXT</a>
         <a class="btn btn-secondary btn-small" href="/export/owned">Save Owned TXT</a>
         <a class="btn btn-secondary btn-small" href="/export/missing">Save Missing TXT</a>
-        <a class="btn btn-secondary btn-small" href="/export/orders">Save Orders TXT</a>
+        <form method="get" action="/export/orders" class="order-export-form">
+          <input type="date" name="from" title="From date">
+          <input type="date" name="to" title="To date">
+          <button class="btn btn-secondary btn-small" type="submit">Save Orders TXT</button>
+        </form>
         <button class="btn btn-secondary btn-small" onclick="window.print()">Save PDF</button>
       </div>
     </div>
