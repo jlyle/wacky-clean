@@ -164,6 +164,7 @@
             <td>{{ c.sticker_number }}</td>
             <td><a href="{{ url_for('card_detail', card_id=c.id) }}">{{ c.name }}</a></td>
             <td>{% if c.owned == 1 %}Owned{% else %}Missing{% endif %}</td>
+            {% if is_owner %}
             <td>
               <form method="post" action="{{ url_for('update_duplicates', card_id=c.id) }}">
                 <input type="hidden" name="next" value="{{ request.full_path }}">
@@ -209,6 +210,13 @@
               </form>
               {% endif %}
             </td>
+            {% else %}
+            <td>{{ c.duplicate_count }}</td>
+            <td>{{ c.back_color or "—" }}</td>
+            <td>{{ c.notes or "—" }}</td>
+            <td>{{ c.order_date or "—" }}</td>
+            <td></td>
+            {% endif %}
           </tr>
           {% endfor %}
         </tbody>
@@ -229,6 +237,7 @@
         <h3>{{ c.name }}</h3>
         <div class="meta">Series {{ c.series }} • Sticker #{{ c.sticker_number }}</div>
 
+        {% if is_owner %}
         <form method="post" action="{{ url_for('update_back_color', card_id=c.id) }}" class="backcolor-form">
           <input type="hidden" name="next" value="{{ request.full_path }}">
           <label>Back color</label>
@@ -253,6 +262,11 @@
           <input type="date" name="order_date" value="{{ c.order_date }}">
           <button class="btn btn-small btn-secondary" type="submit">Save</button>
         </form>
+        {% else %}
+        <div class="meta">Back color: {{ c.back_color or "—" }}</div>
+        {% if c.duplicate_count > 0 %}<div class="meta">Duplicates: {{ c.duplicate_count }}</div>{% endif %}
+        {% if c.order_date %}<div class="meta">Order date: {{ c.order_date }}</div>{% endif %}
+        {% endif %}
 
         <div class="card-bottom">
           <div class="status-code">
@@ -265,6 +279,7 @@
           </div>
 
           <div class="card-actions">
+            {% if is_owner %}
             {% if c.owned == 1 %}
             <form method="post" action="{{ url_for('mark_missing', card_id=c.id) }}">
               <input type="hidden" name="next" value="{{ request.full_path }}">
@@ -275,6 +290,7 @@
               <input type="hidden" name="next" value="{{ request.full_path }}">
               <button class="btn btn-primary" type="submit">Mark Owned</button>
             </form>
+            {% endif %}
             {% endif %}
             <a class="btn btn-secondary" href="{{ url_for('card_detail', card_id=c.id) }}">Details</a>
           </div>

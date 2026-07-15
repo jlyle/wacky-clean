@@ -1,25 +1,21 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, Response
-import sqlite3, re, csv, io, os, shutil, sys
-from pathlib import Path
+from flask import Flask, render_template, request, redirect, url_for, flash, Response, session
+import re, csv, io, os, secrets
+import psycopg2
+import psycopg2.extras
 
 app = Flask(__name__)
-app.secret_key = "wacky-value-box"
+app.secret_key = os.environ["SECRET_KEY"]
+app.config.update(
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+)
 
-BASE_DIR = Path(__file__).resolve().parent
+DATABASE_URL = os.environ["DATABASE_URL"]
+ADMIN_PASSWORD = os.environ["ADMIN_PASSWORD"]
+
 BACK_COLOR_OPTIONS = ["white", "tan", "red ludlow", "black ludlow", "cloth"]
 PUZZLE_PIECES_PER_SERIES = 9
-
-def user_data_dir():
-    """Writable per-OS location for the db when running as a packaged desktop app."""
-    if sys.platform == "win32":
-        base = Path(os.environ.get("APPDATA", Path.home()))
-    elif sys.platform == "darwin":
-        base = Path.home() / "Library" / "Application Support"
-    else:
-        base = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share"))
-    data_dir = base / "WackyPackagesVault"
-    data_dir.mkdir(parents=True, exist_ok=True)
-    return data_dir
 
 SERIES1_MAP = {
     1: {"title": "6 Up", "image": "1st_series_01_6up.jpg"},
@@ -53,70 +49,54 @@ SERIES1_MAP = {
     30: {"title": "Weakies", "image": "1st_series_30_weakies.jpg"},
 }
 
-if getattr(sys, "frozen", False):
-    DB_PATH = user_data_dir() / "wacky_packages.db"
-    if not DB_PATH.exists():
-        seed_db = BASE_DIR / "wacky_packages.db"
-        if seed_db.exists():
-            shutil.copy(seed_db, DB_PATH)
-else:
-    DB_PATH = BASE_DIR / "wacky_packages.db"
+class PGConnection:
+    """Thin wrapper so existing conn.execute(...).fetchall() call sites need no rewrite."""
+    def __init__(self, conn):
+        self._conn = conn
+
+    def execute(self, query, params=None):
+        cur = self._conn.cursor()
+        cur.execute(query, params or ())
+        return cur
+
+    def commit(self):
+        self._conn.commit()
+
+    def close(self):
+        self._conn.close()
 
 def get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+    conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
+    return PGConnection(conn)
 
-def table_columns(conn, table_name):
-    rows = conn.execute(f"PRAGMA table_info({table_name})").fetchall()
-    return {row["name"] for row in rows}
+def login_required(view):
+    from functools import wraps
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if not session.get("is_owner"):
+            return "Forbidden", 403
+        return view(*args, **kwargs)
+    return wrapped
 
-def ensure_card_columns():
-    conn = get_db()
-    cols = table_columns(conn, "cards")
-    wanted = {
-        "back_color": "TEXT",
-        "image_filename": "TEXT",
-        "image": "TEXT",
-        "duplicate_count": "INTEGER DEFAULT 0",
-        "owned": "INTEGER DEFAULT 0",
-        "notes": "TEXT",
-        "order_date": "TEXT",
-    }
-    for col, col_type in wanted.items():
-        if col not in cols:
-            conn.execute(f"ALTER TABLE cards ADD COLUMN {col} {col_type}")
-    conn.execute("UPDATE cards SET duplicate_count = 0 WHERE duplicate_count IS NULL")
-    if "cond" in cols:
-        conn.execute("ALTER TABLE cards DROP COLUMN cond")
-    conn.commit()
-    conn.close()
+@app.context_processor
+def inject_is_owner():
+    return {"is_owner": bool(session.get("is_owner"))}
 
-def ensure_puzzle_table():
-    conn = get_db()
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS series_puzzle_pieces (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            series INTEGER NOT NULL,
-            piece_number INTEGER NOT NULL,
-            owned INTEGER DEFAULT 0,
-            duplicate_count INTEGER DEFAULT 0,
-            notes TEXT,
-            UNIQUE(series, piece_number)
-        )
-    """)
-    cols = table_columns(conn, "series_puzzle_pieces")
-    if "duplicate_count" not in cols:
-        conn.execute("ALTER TABLE series_puzzle_pieces ADD COLUMN duplicate_count INTEGER DEFAULT 0")
-    conn.execute("UPDATE series_puzzle_pieces SET duplicate_count = 0 WHERE duplicate_count IS NULL")
-    for series in range(1, 17):
-        for piece in range(1, PUZZLE_PIECES_PER_SERIES + 1):
-            conn.execute("""
-                INSERT OR IGNORE INTO series_puzzle_pieces (series, piece_number, owned, duplicate_count, notes)
-                VALUES (?, ?, 0, 0, '')
-            """, (series, piece))
-    conn.commit()
-    conn.close()
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    error = None
+    if request.method == "POST":
+        password = request.form.get("password") or ""
+        if secrets.compare_digest(password, ADMIN_PASSWORD):
+            session["is_owner"] = True
+            return redirect(request.form.get("next") or url_for("index"))
+        error = "Incorrect password."
+    return render_template("login.html", error=error, next=request.args.get("next", ""))
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    session.pop("is_owner", None)
+    return redirect(request.referrer or url_for("index"))
 
 def normalize_owned(value):
     if value is None:
@@ -139,29 +119,22 @@ def display_name(series, sticker_number, sticker_name):
             return mapped
     return format_name(sticker_name)
 
-def get_image_value(row, columns):
-    if "image_filename" in columns and row["image_filename"]:
+def get_image_value(row):
+    if row["image_filename"]:
         return row["image_filename"]
-    if "image" in columns and row["image"]:
+    if row["image"]:
         return row["image"]
     if int(row["series"]) == 1:
         return SERIES1_MAP.get(int(row["sticker_number"]), {}).get("image")
     return None
 
 def load_cards():
-    ensure_card_columns()
     conn = get_db()
-    cols = table_columns(conn, "cards")
-    fields = [
-        "id", "series", "sticker_number", "sticker_name", "owned",
-        "back_color" if "back_color" in cols else "NULL AS back_color",
-        "image_filename" if "image_filename" in cols else "NULL AS image_filename",
-        "image" if "image" in cols else "NULL AS image",
-        "duplicate_count" if "duplicate_count" in cols else "0 AS duplicate_count",
-        "notes" if "notes" in cols else "NULL AS notes",
-        "order_date" if "order_date" in cols else "NULL AS order_date",
-    ]
-    rows = conn.execute(f"SELECT {', '.join(fields)} FROM cards ORDER BY series, sticker_number").fetchall()
+    rows = conn.execute(
+        "SELECT id, series, sticker_number, sticker_name, owned, back_color, "
+        "image_filename, image, duplicate_count, notes, order_date "
+        "FROM cards ORDER BY series, sticker_number"
+    ).fetchall()
     conn.close()
     cards = []
     for row in rows:
@@ -177,7 +150,7 @@ def load_cards():
             "sticker_name": row["sticker_name"],
             "owned": normalize_owned(row["owned"]),
             "back_color": row["back_color"],
-            "image": get_image_value(row, cols),
+            "image": get_image_value(row),
             "duplicate_count": dupes,
             "notes": row["notes"] or "",
             "order_date": row["order_date"] or "",
@@ -239,7 +212,6 @@ def card_stats(cards):
     return total_cards, owned_total, duplicate_total, completion_pct, series_progress
 
 def load_puzzles():
-    ensure_puzzle_table()
     conn = get_db()
     rows = conn.execute("SELECT series, piece_number, owned, duplicate_count, notes FROM series_puzzle_pieces ORDER BY series, piece_number").fetchall()
     conn.close()
@@ -279,6 +251,7 @@ def puzzles():
     return render_template("puzzles.html", puzzle_series=grouped, total_pieces=total_pieces, owned_pieces=owned_pieces, duplicate_total=duplicate_total, percent=percent)
 
 @app.route("/update_puzzle_piece/<int:series>/<int:piece_number>", methods=["POST"])
+@login_required
 def update_puzzle_piece(series, piece_number):
     owned = 1 if request.form.get("owned") == "1" else 0
     notes = (request.form.get("notes") or "").strip()
@@ -287,9 +260,8 @@ def update_puzzle_piece(series, piece_number):
         duplicate_count = max(0, int(raw_dup))
     except ValueError:
         duplicate_count = 0
-    ensure_puzzle_table()
     conn = get_db()
-    conn.execute("UPDATE series_puzzle_pieces SET owned = ?, duplicate_count = ?, notes = ? WHERE series = ? AND piece_number = ?", (owned, duplicate_count, notes, series, piece_number))
+    conn.execute("UPDATE series_puzzle_pieces SET owned = %s, duplicate_count = %s, notes = %s WHERE series = %s AND piece_number = %s", (owned, duplicate_count, notes, series, piece_number))
     conn.commit()
     conn.close()
     flash(f"Series {series} puzzle piece {piece_number} updated.")
@@ -304,34 +276,38 @@ def card_detail(card_id):
     return render_template("card_detail.html", card=card)
 
 @app.route("/update_notes/<int:card_id>", methods=["POST"])
+@login_required
 def update_notes(card_id):
     notes = (request.form.get("notes") or "").strip()
     conn = get_db()
-    conn.execute("UPDATE cards SET notes = ? WHERE id = ?", (notes, card_id))
+    conn.execute("UPDATE cards SET notes = %s WHERE id = %s", (notes, card_id))
     conn.commit()
     conn.close()
     flash("Notes updated.")
     return redirect(request.form.get("next") or request.referrer or url_for("card_detail", card_id=card_id))
 
 @app.route("/mark_owned/<int:card_id>", methods=["POST"])
+@login_required
 def mark_owned(card_id):
     conn = get_db()
-    conn.execute("UPDATE cards SET owned = 1 WHERE id = ?", (card_id,))
+    conn.execute("UPDATE cards SET owned = 1 WHERE id = %s", (card_id,))
     conn.commit()
     conn.close()
     flash("Card marked as owned.")
     return redirect(request.form.get("next") or request.referrer or url_for("index"))
 
 @app.route("/mark_missing/<int:card_id>", methods=["POST"])
+@login_required
 def mark_missing(card_id):
     conn = get_db()
-    conn.execute("UPDATE cards SET owned = 0, duplicate_count = 0 WHERE id = ?", (card_id,))
+    conn.execute("UPDATE cards SET owned = 0, duplicate_count = 0 WHERE id = %s", (card_id,))
     conn.commit()
     conn.close()
     flash("Card marked as missing.")
     return redirect(request.form.get("next") or request.referrer or url_for("index"))
 
 @app.route("/update_duplicates/<int:card_id>", methods=["POST"])
+@login_required
 def update_duplicates(card_id):
     raw = (request.form.get("duplicate_count") or "0").strip()
     try:
@@ -340,9 +316,9 @@ def update_duplicates(card_id):
         value = 0
     conn = get_db()
     if value > 0:
-        conn.execute("UPDATE cards SET duplicate_count = ?, owned = 1 WHERE id = ?", (value, card_id))
+        conn.execute("UPDATE cards SET duplicate_count = %s, owned = 1 WHERE id = %s", (value, card_id))
     else:
-        conn.execute("UPDATE cards SET duplicate_count = 0 WHERE id = ?", (card_id,))
+        conn.execute("UPDATE cards SET duplicate_count = 0 WHERE id = %s", (card_id,))
     conn.commit()
     conn.close()
     flash("Duplicate count updated.")
@@ -494,26 +470,26 @@ def export_orders():
     )
 
 @app.route("/update_back_color/<int:card_id>", methods=["POST"])
+@login_required
 def update_back_color(card_id):
     value = request.form.get("back_color") or None
     conn = get_db()
-    conn.execute("UPDATE cards SET back_color = ? WHERE id = ?", (value, card_id))
+    conn.execute("UPDATE cards SET back_color = %s WHERE id = %s", (value, card_id))
     conn.commit()
     conn.close()
     flash("Back color updated.")
     return redirect(request.form.get("next") or request.referrer or url_for("index"))
 
 @app.route("/update_order_date/<int:card_id>", methods=["POST"])
+@login_required
 def update_order_date(card_id):
     value = request.form.get("order_date") or None
     conn = get_db()
-    conn.execute("UPDATE cards SET order_date = ? WHERE id = ?", (value, card_id))
+    conn.execute("UPDATE cards SET order_date = %s WHERE id = %s", (value, card_id))
     conn.commit()
     conn.close()
     flash("Order date updated.")
     return redirect(request.form.get("next") or request.referrer or url_for("index"))
 
 if __name__ == "__main__":
-    ensure_card_columns()
-    ensure_puzzle_table()
     app.run(host="0.0.0.0", port=5050, debug=True)

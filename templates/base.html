@@ -8,6 +8,16 @@
 </head>
 <body>
   <div class="page-shell">
+    <div class="owner-bar">
+      {% if is_owner %}
+        <span>Owner mode</span>
+        <form method="post" action="{{ url_for('logout') }}" class="owner-bar-form">
+          <button class="link-button" type="submit">Log out</button>
+        </form>
+      {% else %}
+        <a href="{{ url_for('login', next=request.full_path) }}">Owner log in</a>
+      {% endif %}
+    </div>
     {% with messages = get_flashed_messages() %}
       {% if messages %}
         <div class="flash-stack">

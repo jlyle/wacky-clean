@@ -45,6 +45,7 @@
         <div class="detail-row"><span>Order date</span><strong>{{ card.order_date or "—" }}</strong></div>
       </div>
 
+      {% if is_owner %}
       <div class="notes-block">
         <h3>Order date</h3>
         <form method="post" action="{{ url_for('update_order_date', card_id=card.id) }}">
@@ -66,6 +67,12 @@
           </div>
         </form>
       </div>
+      {% elif card.notes %}
+      <div class="notes-block">
+        <h3>Notes</h3>
+        <p>{{ card.notes }}</p>
+      </div>
+      {% endif %}
     </div>
   </div>
 </section>
