@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, Response
-import sqlite3, re, csv, io
+import sqlite3, re, csv, io, os, shutil, sys
 from pathlib import Path
 
 app = Flask(__name__)
@@ -8,6 +8,18 @@ app.secret_key = "wacky-value-box"
 BASE_DIR = Path(__file__).resolve().parent
 BACK_COLOR_OPTIONS = ["white", "tan", "red ludlow", "black ludlow", "cloth"]
 PUZZLE_PIECES_PER_SERIES = 9
+
+def user_data_dir():
+    """Writable per-OS location for the db when running as a packaged desktop app."""
+    if sys.platform == "win32":
+        base = Path(os.environ.get("APPDATA", Path.home()))
+    elif sys.platform == "darwin":
+        base = Path.home() / "Library" / "Application Support"
+    else:
+        base = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share"))
+    data_dir = base / "WackyPackagesVault"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    return data_dir
 
 SERIES1_MAP = {
     1: {"title": "6 Up", "image": "1st_series_01_6up.jpg"},
@@ -41,7 +53,14 @@ SERIES1_MAP = {
     30: {"title": "Weakies", "image": "1st_series_30_weakies.jpg"},
 }
 
-DB_PATH = BASE_DIR / "wacky_packages.db"
+if getattr(sys, "frozen", False):
+    DB_PATH = user_data_dir() / "wacky_packages.db"
+    if not DB_PATH.exists():
+        seed_db = BASE_DIR / "wacky_packages.db"
+        if seed_db.exists():
+            shutil.copy(seed_db, DB_PATH)
+else:
+    DB_PATH = BASE_DIR / "wacky_packages.db"
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)

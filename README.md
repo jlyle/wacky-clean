@@ -36,6 +36,36 @@ cd wacky-clean
 `run.sh` creates a `venv/`, installs Flask into it, and starts the app at
 `http://localhost:5001`. Re-running it is safe — it reuses the existing venv.
 
+### Desktop app (no Python required for end users)
+
+`desktop.py` runs the same Flask app in a background thread and opens it in a
+native window via [pywebview](https://pywebview.flowrl.com/) — no browser tab,
+no visible port. PyInstaller then bundles that into a single OS-native
+executable that friends/family can double-click.
+
+Windows and macOS get their native webview (WebView2 / WKWebView) for free
+from the OS. **On Linux**, pywebview needs a GTK+WebKit2 (or Qt) backend
+installed first — on Fedora: `sudo dnf install python3-gobject webkit2gtk4.1
+gtk3`. Building/running on Linux without it will fail to open a window even
+though the Flask app itself starts fine.
+
+```bash
+source venv/bin/activate
+pip install -r requirements-desktop.txt
+python3 desktop.py          # run the desktop shell directly, for testing
+
+pyinstaller desktop.spec    # build a standalone executable
+```
+
+The build lands in `dist/` — `WackyPackagesVault.app` on macOS,
+`WackyPackagesVault.exe` on Windows, `WackyPackagesVault` on Linux. PyInstaller
+doesn't cross-compile, so build on each target OS separately.
+
+On first launch, the packaged app copies the seed `wacky_packages.db` into a
+per-user, per-OS data directory (`%APPDATA%` on Windows, `~/Library/Application
+Support` on macOS, `~/.local/share` on Linux) so each user gets their own
+writable collection that survives app updates/reinstalls.
+
 ### File layout
 
 | Path                    | Purpose                                                        |
@@ -44,6 +74,9 @@ cd wacky-clean
 | `wacky_packages.db`      | SQLite database — cards and puzzle pieces (tracked in git)      |
 | `run.sh`                 | Sets up the venv, installs deps, launches the app                |
 | `requirements.txt`       | Python dependencies (just `flask`)                               |
+| `desktop.py`              | Native-window launcher (pywebview) for the packaged desktop app  |
+| `desktop.spec`            | PyInstaller build spec for the desktop executable                |
+| `requirements-desktop.txt` | Extra deps for building the desktop app (`pywebview`, `pyinstaller`) |
 | `templates/base.html`    | Shared page shell (nav, flash messages)                          |
 | `templates/index.html`   | Card list: gallery/spreadsheet views, filters, stats, exports    |
 | `templates/card_detail.html` | Single-card detail view with notes editor                    |
