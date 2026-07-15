@@ -49,6 +49,16 @@ installed first — on Fedora: `sudo dnf install python3-gobject webkit2gtk4.1
 gtk3`. Building/running on Linux without it will fail to open a window even
 though the Flask app itself starts fine.
 
+The system-installed GTK bindings (`gi`) aren't visible from a normal venv, so
+on Linux the venv must be created with `--system-site-packages`:
+
+```bash
+rm -rf venv
+python3 -m venv --system-site-packages venv
+```
+
+Windows/macOS don't need this — a normal venv is fine there.
+
 ```bash
 source venv/bin/activate
 pip install -r requirements-desktop.txt
