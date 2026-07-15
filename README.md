@@ -34,7 +34,7 @@ cd wacky-clean
 ```
 
 `run.sh` creates a `venv/`, installs Flask into it, and starts the app at
-`http://localhost:5001`. Re-running it is safe — it reuses the existing venv.
+`http://localhost:5050`. Re-running it is safe — it reuses the existing venv.
 
 ### Desktop app (no Python required for end users)
 
@@ -174,7 +174,7 @@ Unfiltered, whole-collection reports:
 - Flask + SQLite (stdlib `sqlite3`, no ORM)
 - Server-rendered Jinja templates, no JS framework
 - Card images in `static/cards/`
-- Runs as a single-process dev server (`app.run`) on port 5001 — fine for
+- Runs as a single-process dev server (`app.run`) on port 5050 — fine for
   local/personal use, not hardened for public hosting
 
 ## Image credit

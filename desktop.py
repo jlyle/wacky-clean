@@ -6,7 +6,7 @@ import webview
 from app import app, ensure_card_columns, ensure_puzzle_table
 
 HOST = "127.0.0.1"
-PORT = 5001
+PORT = 5050
 
 
 def start_server():
