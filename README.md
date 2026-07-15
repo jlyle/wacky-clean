@@ -76,6 +76,15 @@ per-user, per-OS data directory (`%APPDATA%` on Windows, `~/Library/Application
 Support` on macOS, `~/.local/share` on Linux) so each user gets their own
 writable collection that survives app updates/reinstalls.
 
+#### Building all three platforms via GitHub Actions
+
+Since PyInstaller can't cross-compile, `.github/workflows/build-desktop.yml`
+builds Linux, Windows, and macOS executables in parallel on GitHub-hosted
+runners. Trigger it manually from the repo's **Actions** tab → "Build desktop
+app" → **Run workflow**, then download `WackyPackagesVault-linux`,
+`WackyPackagesVault-windows`, and `WackyPackagesVault-macos` from the
+finished run's artifacts.
+
 ### File layout
 
 | Path                    | Purpose                                                        |
