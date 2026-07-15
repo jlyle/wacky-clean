@@ -38,6 +38,11 @@ cd wacky-clean
 
 ### Desktop app (no Python required for end users)
 
+Pre-built executables for Linux (Ubuntu and Fedora), Windows, and macOS are
+available from the
+[latest release](https://github.com/jlyle/wacky-clean/releases/tag/v1.0-desktop) —
+download, unzip, and run, no Python install required.
+
 `desktop.py` runs the same Flask app in a background thread and opens it in a
 native window via [pywebview](https://pywebview.flowrl.com/) — no browser tab,
 no visible port. PyInstaller then bundles that into a single OS-native
