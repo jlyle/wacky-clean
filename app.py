@@ -21,38 +21,6 @@ def user_data_dir():
     data_dir.mkdir(parents=True, exist_ok=True)
     return data_dir
 
-SERIES1_MAP = {
-    1: {"title": "6 Up", "image": "1st_series_01_6up.jpg"},
-    3: {"title": "Breadcrust", "image": "1st_series_03_breadcrust.jpg"},
-    4: {"title": "Camals", "image": "1st_series_04_camals.jpg"},
-    5: {"title": "Chock", "image": "1st_series_05_chock.jpg"},
-    6: {"title": "Cover Ghoul", "image": "1st_series_06_coverghoul.jpg"},
-    7: {"title": "Crust", "image": "1st_series_07_crust.jpg"},
-    8: {"title": "Dopey Whip", "image": "1st_series_08_dopey.jpg"},
-    9: {"title": "Duzn't", "image": "1st_series_09_duznt.jpg"},
-    10: {"title": "Fink", "image": "1st_series_10_fink.jpg"},
-    11: {"title": "Gadzooka", "image": "1st_series_11_gadzooka.jpg"},
-    12: {"title": "Grave Train", "image": "1st_series_12_grave.jpg"},
-    13: {"title": "Horrid", "image": "1st_series_13_horrid.jpg"},
-    14: {"title": "Hostage", "image": "1st_series_14_hostage.jpg"},
-    15: {"title": "Jail-O", "image": "1st_series_15_jailo.jpg"},
-    16: {"title": "Kook Aid", "image": "1st_series_16_kookaid.jpg"},
-    17: {"title": "Lavirus", "image": "1st_series_17_lavirus.jpg"},
-    18: {"title": "Liptorn", "image": "1st_series_18_liptorn.jpg"},
-    19: {"title": "Maddie Boy", "image": "1st_series_19_maddie.jpg"},
-    20: {"title": "Minute Lice", "image": "1st_series_20_minute.jpg"},
-    21: {"title": "Mrs. Klean", "image": "1st_series_21_mrsklean.jpg"},
-    22: {"title": "Mutts", "image": "1st_series_22_mutts.jpg"},
-    23: {"title": "Paul Maul", "image": "1st_series_23_paulmaul.jpg"},
-    24: {"title": "Pure Hex", "image": "1st_series_24_purehex.jpg"},
-    25: {"title": "Quacker Oats", "image": "1st_series_25_quacker.jpg"},
-    26: {"title": "Skimpy", "image": "1st_series_26_skimpy.jpg"},
-    27: {"title": "Spray Nit", "image": "1st_series_27_spraynit.jpg"},
-    28: {"title": "Tied", "image": "1st_series_28_tied.jpg"},
-    29: {"title": "Vicejoy", "image": "1st_series_29_vicejoy.jpg"},
-    30: {"title": "Weakies", "image": "1st_series_30_weakies.jpg"},
-}
-
 if getattr(sys, "frozen", False):
     DB_PATH = user_data_dir() / "wacky_packages.db"
     if not DB_PATH.exists():
@@ -133,10 +101,6 @@ def format_name(name):
     return name.strip()
 
 def display_name(series, sticker_number, sticker_name):
-    if int(series) == 1:
-        mapped = SERIES1_MAP.get(int(sticker_number), {}).get("title")
-        if mapped:
-            return mapped
     return format_name(sticker_name)
 
 def get_image_value(row, columns):
@@ -144,8 +108,6 @@ def get_image_value(row, columns):
         return row["image_filename"]
     if "image" in columns and row["image"]:
         return row["image"]
-    if int(row["series"]) == 1:
-        return SERIES1_MAP.get(int(row["sticker_number"]), {}).get("image")
     return None
 
 def load_cards():
