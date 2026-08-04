@@ -56,9 +56,9 @@ own endpoint (`/mark_owned`, `/update_duplicates`, `/update_back_color`,
 redirect to `request.form["next"]` → `request.referrer` → a sensible default, so
 the UI stays put after edits. No AJAX.
 
-**Owned/duplicate coupling is deliberate.** Setting `duplicate_count > 0` forces
-`owned = 1`; marking a card missing zeroes `duplicate_count`. Keep this invariant
-when touching those routes.
+**Owned and duplicate_count are independent.** Setting a duplicate count does not
+change `owned` — a card can have duplicates without being marked owned. Marking a
+card missing (`/mark_missing`) still zeroes `duplicate_count`.
 
 **DB path depends on whether it's frozen.** In dev, the DB is `BASE_DIR/wacky_packages.db`.
 When packaged (`sys.frozen`), `app.py` copies the seed DB into a per-user, per-OS

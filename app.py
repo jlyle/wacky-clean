@@ -301,10 +301,7 @@ def update_duplicates(card_id):
     except ValueError:
         value = 0
     conn = get_db()
-    if value > 0:
-        conn.execute("UPDATE cards SET duplicate_count = ?, owned = 1 WHERE id = ?", (value, card_id))
-    else:
-        conn.execute("UPDATE cards SET duplicate_count = 0 WHERE id = ?", (card_id,))
+    conn.execute("UPDATE cards SET duplicate_count = ? WHERE id = ?", (value, card_id))
     conn.commit()
     conn.close()
     flash("Duplicate count updated.")
