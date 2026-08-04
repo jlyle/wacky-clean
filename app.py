@@ -350,6 +350,7 @@ def export_duplicates():
     filtered = [c for c in cards if c["duplicate_count"] > 0]
     filtered.sort(key=lambda c: (c["series"], c["sticker_number"]))
     name_width = max((len(c["name"]) for c in filtered), default=0)
+    back_width = max((len(c["back_color"] or "") for c in filtered), default=0)
     lines = []
     current_series = None
     for c in filtered:
@@ -359,7 +360,8 @@ def export_duplicates():
             current_series = c["series"]
             lines.append(f"Series {c['series']}")
             lines.append("")
-        lines.append(f"{c['name'].ljust(name_width)}   {c['duplicate_count']}")
+        back = c["back_color"] or ""
+        lines.append(f"{c['name'].ljust(name_width)}   {back.ljust(back_width)}   {c['duplicate_count']}")
     return Response(
         "\n".join(lines) + ("\n" if lines else ""),
         mimetype="text/plain",
